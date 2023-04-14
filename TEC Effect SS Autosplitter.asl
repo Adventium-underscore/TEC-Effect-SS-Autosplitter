@@ -55,7 +55,7 @@ split {
 isLoading {
 	if(current.ingame == 0) {
 		return true;
-	} else if(current.halted == 2 || current.halted == 4 || current.halted == 8) {
+	} else if(current.halted == 2 || current.halted == 4 || current.halted == 8 || old.halted == 4 || old.halted == 8) {
 		return true;
 	} else if(current.paused != 0) {
 		return true;
