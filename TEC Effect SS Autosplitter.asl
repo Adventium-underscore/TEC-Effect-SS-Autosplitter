@@ -28,18 +28,24 @@ init {
 	print("[TE:C Autosplitter] Initialization complete.");
 }
 
-// Update variables and convert some to booleans
+// Update memory watcher and convert them into more convenient forms
 update {
 	vars.watchers.UpdateAll(game);
-	current.haltflag = vars.watchers["PuzzleHaltReason"].Current;
 	
 	current.ingame = (vars.watchers["PuzzleManager"].Current != 0);
 	current.paused = (vars.watchers["PauseManager"].Current != 0);
+	
+	current.halted = ((vars.watchers["PuzzleHaltReason"].Current & 14) != 0); //0b_1110
+	current.ended = ((vars.watchers["PuzzleHaltReason"].Current & 8) != 0); //0b_1000
+	
+	if(current.paused && current.ended) {
+		current.pauseRestart = true;
+	}
 }
 
 // Start the timer when the game is loaded, not halted, and not paused
 start {
-	if(current.ingame && current.haltflag == 0 && !current.paused) {
+	if(current.ingame && !current.halted && !current.paused) {
 		print("[TE:C Autosplitter] Timer started.");
 		return true;
 	}
@@ -47,10 +53,6 @@ start {
 
 // Split when the game unloads a mode
 split {
-	if(current.paused && (current.haltflag == 8 || current.haltflag == 10)) {
-		current.pauseRestart = true;
-	}
-	
 	if(!current.ingame && old.ingame) {
 		if(current.pauseRestart) {
 			current.pauseRestart = false;
@@ -63,11 +65,7 @@ split {
 
 // Pause the timer if the mode is unloaded (in-between modes), the game is paused, or the player doesn't have control
 isLoading {
-	if(!current.ingame || !old.ingame) {
-		return true;
-	} else if(current.haltflag == 2 || current.haltflag == 4 || current.haltflag == 8 || current.haltflag == 24) {
-		return true;
-	} else if(current.paused) {
+	if(!current.ingame || !old.ingame || current.halted || current.paused) {
 		return true;
 	} else {
 		return false;
