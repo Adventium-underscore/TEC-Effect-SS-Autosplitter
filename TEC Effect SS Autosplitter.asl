@@ -20,24 +20,26 @@ init {
 		new MemoryWatcher<int>(new DeepPointer(baseAddr, 0x8, 0x800, 0xC0, 0x248, 0x0))
 											  {Name = "PuzzleManager", FailAction = MemoryWatcher.ReadFailAction.SetZeroOrNull},
 		new MemoryWatcher<byte>(new DeepPointer(baseAddr, 0x8, 0x800, 0xC0, 0x248, 0x0, 0x45C))
-											   {Name = "PuzzleHaltReason", FailAction = MemoryWatcher.ReadFailAction.SetZeroOrNull},
+											   {Name = "PuzzleHaltReason", FailAction = MemoryWatcher.ReadFailAction.DontUpdate},
 		new MemoryWatcher<int>(new DeepPointer(baseAddr, 0x8, 0x800, 0xC0, 0x258, 0x0, 0x3D0))
 											  {Name = "PauseManager", FailAction = MemoryWatcher.ReadFailAction.SetZeroOrNull}
 	};
+	current.pauseRestart = false;
 	print("[TE:C Autosplitter] Initialization complete.");
 }
 
-// Update variables, assign to current for cleaner code
+// Update variables and convert some to booleans
 update {
-    vars.watchers.UpdateAll(game);
-    current.ingame = vars.watchers["PuzzleManager"].Current;
-    current.halted = vars.watchers["PuzzleHaltReason"].Current;
-    current.paused = vars.watchers["PauseManager"].Current;
+	vars.watchers.UpdateAll(game);
+	current.haltflag = vars.watchers["PuzzleHaltReason"].Current;
+	
+	current.ingame = (vars.watchers["PuzzleManager"].Current != 0);
+	current.paused = (vars.watchers["PauseManager"].Current != 0);
 }
 
-// Start the timer when the game loads a mode
+// Start the timer when the game is loaded, not halted, and not paused
 start {
-	if(current.ingame != 0) {
+	if(current.ingame && current.haltflag == 0 && !current.paused) {
 		print("[TE:C Autosplitter] Timer started.");
 		return true;
 	}
@@ -45,19 +47,27 @@ start {
 
 // Split when the game unloads a mode
 split {
-	if(current.ingame == 0 && old.ingame != 0) {
-		print("[TE:C Autosplitter] Timer split.");
-		return true;
+	if(current.paused && (current.haltflag == 8 || current.haltflag == 10)) {
+		current.pauseRestart = true;
+	}
+	
+	if(!current.ingame && old.ingame) {
+		if(current.pauseRestart) {
+			current.pauseRestart = false;
+		} else {
+			print("[TE:C Autosplitter] Timer split.");
+			return true;
+		}
 	}
 }
 
 // Pause the timer if the mode is unloaded (in-between modes), the game is paused, or the player doesn't have control
 isLoading {
-	if(current.ingame == 0) {
+	if(!current.ingame || !old.ingame) {
 		return true;
-	} else if(current.halted == 2 || current.halted == 4 || current.halted == 8 || old.halted == 4 || old.halted == 8) {
+	} else if(current.haltflag == 2 || current.haltflag == 4 || current.haltflag == 8 || current.haltflag == 24) {
 		return true;
-	} else if(current.paused != 0) {
+	} else if(current.paused) {
 		return true;
 	} else {
 		return false;
