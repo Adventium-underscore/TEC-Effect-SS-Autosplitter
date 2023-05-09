@@ -41,6 +41,9 @@ update {
 	if(current.paused && current.ended) {
 		current.pauseRestart = true;
 	}
+	if(!current.ingame && !old.ingame) {
+        current.pauseRestart = false;
+    }
 }
 
 // Start the timer when the game is loaded, not halted, and not paused
@@ -56,6 +59,7 @@ split {
 	if(!current.ingame && old.ingame) {
 		if(current.pauseRestart) {
 			current.pauseRestart = false;
+			print("[TE:C Autosplitter] Skipping timer split.");
 		} else {
 			print("[TE:C Autosplitter] Timer split.");
 			return true;
