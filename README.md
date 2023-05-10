@@ -15,7 +15,7 @@ Unlike the Journey mode autosplitter, this autosplitter will not be automaticall
 _________
 
 ### Usage and Limitations
-The autosplitter will start once you load into any level, and will split when you unload a level. That's pretty much it.
+The autosplitter will start once you load into any level, and will split when you unload a level. It will also pause the timer when the player does not have control, such as when no level is loaded or the mode is counting down to start.
 
 Retrying from the pause menu or from the results both reload the level. The autosplitter is able to detect when the level is unloaded from the pause menu, but not from the results screen. The autosplitter does not check for SS or which modes are played. Unlike the Journey autosplitter, this autosplitter isn't reading the timer due to differences in modes, therefore this times RTA Without Loads and not IGT. This also means there is a slight amount of inaccuracy caused by the delay in reading memory.
 _________
