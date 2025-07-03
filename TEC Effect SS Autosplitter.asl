@@ -1,6 +1,6 @@
 /*
  * Current supported versions:
- * 2.0.1+
+ * 2.0.2+
  */
 state("TetrisEffect-Win64-Shipping") {}
 state("TetrisEffect-WinGDK-Shipping") {}
@@ -10,7 +10,7 @@ init {
 	print("[TE:C Autosplitter] Game launch detected, initializing...");
 
 	// Find a specific mov instruction that conveniently moves data to the base address we use
-	var target = new SigScanTarget(3, "4C 8B 0D ????????", "45 33 FF")
+	var target = new SigScanTarget(3, "4C 8B 0D ????????", "45 33 FF 33 FF")
 								  {OnFound = (p, s, addr) => addr + 0x4 + p.ReadValue<int>(addr)};
 	var baseAddr = new SignatureScanner(game, modules.First().BaseAddress, modules.First().ModuleMemorySize).Scan(target);
 	if (baseAddr == IntPtr.Zero) throw new NullReferenceException();
@@ -24,7 +24,13 @@ init {
 		new MemoryWatcher<int>(new DeepPointer(baseAddr, 0x8, 0x800, 0xC0, 0x258, 0x0, 0x3D0))
 											  {Name = "PauseManager", FailAction = MemoryWatcher.ReadFailAction.SetZeroOrNull}
 	};
+
+	current.ingame = false;
+	current.paused = false;
+	current.halted = false;
+	current.ended = false;
 	current.pauseRestart = false;
+
 	print("[TE:C Autosplitter] Initialization complete.");
 }
 
