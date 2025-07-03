@@ -24,7 +24,13 @@ init {
 		new MemoryWatcher<int>(new DeepPointer(baseAddr, 0x8, 0x800, 0xC0, 0x258, 0x0, 0x3D0))
 											  {Name = "PauseManager", FailAction = MemoryWatcher.ReadFailAction.SetZeroOrNull}
 	};
+
+	current.ingame = false;
+	current.paused = false;
+	current.halted = false;
+	current.ended = false;
 	current.pauseRestart = false;
+
 	print("[TE:C Autosplitter] Initialization complete.");
 }
 
